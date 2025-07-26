@@ -11,6 +11,7 @@ load_dotenv()
 TRAIN_MODE = os.getenv("TRAIN_MODE", "full")
 CHROMA_PATH = os.getenv("CHROMA_PATH", "chroma_db")
 DATA_PATH = os.getenv("DATA_PATH", "data")
+EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL")
 HASH_FILE = "trained_hashes.txt"
 
 def file_hash(filepath):
@@ -33,7 +34,7 @@ def save_trained_hashes(hashes):
 
 def main():
     trained_hashes = load_trained_hashes()
-    embeddings = HuggingFaceEmbeddings(model_name='all-MiniLM-L6-v2')
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
     if TRAIN_MODE == "full":
         if os.path.exists(CHROMA_PATH):

@@ -1,11 +1,13 @@
 
+import os
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_ollama import OllamaLLM
 
+EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL")
 
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
 db = Chroma(
     persist_directory='chroma_db',
