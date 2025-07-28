@@ -1,7 +1,7 @@
 import os
 import hashlib
 from dotenv import load_dotenv
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma 
 from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_community.document_loaders.directory import DirectoryLoader
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -12,7 +12,12 @@ TRAIN_MODE = os.getenv("TRAIN_MODE", "full")
 CHROMA_PATH = os.getenv("CHROMA_PATH", "chroma_db")
 DATA_PATH = os.getenv("DATA_PATH", "data")
 EMBEDDINGS_MODEL = os.getenv("EMBEDDINGS_MODEL")
-HASH_FILE = "trained_hashes.txt"
+HASH_FILE = "Data/trained_hashes.txt"
+
+SUPPORTED_EXTENSIONS = [
+    ".txt", ".py", ".cpp", ".h", ".hpp", ".c",
+    ".cs", ".java", ".js", ".ts", ".go", ".rs"
+]
 
 def file_hash(filepath):
     h = hashlib.sha256()
@@ -32,6 +37,15 @@ def save_trained_hashes(hashes):
         for h in hashes:
             f.write(h + "\n")
 
+def loader_factory(path):
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".pdf":
+        return PyPDFLoader(path)
+    elif ext in SUPPORTED_EXTENSIONS:
+        return TextLoader(path, encoding="utf-8")
+    else:
+        raise ValueError(f"Unsupported file extension: {ext}")
+
 def main():
     trained_hashes = load_trained_hashes()
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
@@ -47,10 +61,8 @@ def main():
     loader = DirectoryLoader(
         path="data",
         glob='**/*',
-        loader_cls=lambda path: {
-            ".txt": TextLoader,
-            ".pdf": PyPDFLoader,
-        }.get(os.path.splitext(path)[1], TextLoader)(path)
+        loader_cls=loader_factory,
+        silent_errors=True
     )
 
     all_documents = loader.load()
