@@ -50,6 +50,12 @@ def main():
     trained_hashes = load_trained_hashes()
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
+    #Create Memory DB
+    memory_db = Chroma(
+        persist_directory="memory_db",
+        embedding_function=embeddings
+    )
+
     if TRAIN_MODE == "full":
         if os.path.exists(CHROMA_PATH):
             import shutil
@@ -67,10 +73,20 @@ def main():
 
     all_documents = loader.load()
 
+    filtered_documents = []
+    for doc in all_documents:
+        path = doc.metadata.get("source")
+        if not path:
+            continue
+        # 排除 hashes.txt 檔案，忽略大小寫
+        if os.path.basename(path).lower() == "hashes.txt":
+            continue
+        filtered_documents.append(doc)
+
     new_documents = []
     new_hashes = set()
 
-    for doc in all_documents:
+    for doc in filtered_documents:
         path = doc.metadata.get("source")
         if not path:
             continue
